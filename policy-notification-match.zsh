@@ -21,7 +21,7 @@ while read p_lines;
 do
   echo "Looking for policy ID: $p_lines"
   # Build array of notification channels assigned to $p_lines policy
-  channels_array=(`jq -j "[.channels[] | select(.associatedPolicies.policies[].id == \"$p_lines\") | {name: .name, id: .id}]" $notifications_file | gsed -e 's/ //g'`)
+  channels_array=(`jq -j "[.channels[] | select(.associatedPolicies.policies[].id == \"$p_lines\") |{name:.name,id:.id}]" $notifications_file | gsed -e 's/ //g'`)
     #gsed -e 's/\[//g' -e 's/\]//g' -e 's/\,//g' -e 's/"//g' -e 's/ //g' | \
     #tr '\n' ' '`)
   #echo ${channels_array[*]}
@@ -33,30 +33,33 @@ do
   #echo $policy_name
   #sleep 10
 
-  # Build json output file
-  if [ "$p_lines" = "$first_line" ];
-  then
-    echo "{
-  \"information\": [
-    {
-      \"policy_name\": $policy_name,
-      \"policy_id\": \"$p_lines\",
-      \"notification_channels\": ${channels_array[*]}
-    }," >> policy-channel.json
-  elif [ "$p_lines" = "$last_line" ];
-  then
-    echo "    {
-      \"policy_name\": $policy_name,
-      \"policy_id\": \"$p_lines\",
-      \"notification_channels\": ${channels_array[*]}
-    }
-  ]
-}" >> policy-channel.json
-  else
-    echo "    {
-      \"policy_name\": $policy_name,
-      \"policy_id\": \"$p_lines\",
-      \"notification_channels\": ${channels_array[*]}
-    }," >> policy-channel.json
-  fi
+  # Build json output file for `jsoncsv` translation
+  echo "{\"policy_name\":$policy_name,\"policy_id\":\"$p_lines\",\"notification_channels\":${channels_array[*]}}" >> policy-channel-to-csv.json
+
+  # Build json output file for jq/well-formed
+  #if [ "$p_lines" = "$first_line" ];
+  #then
+  #  echo "{
+  #\"information\": [
+  #  {
+  #    \"policy_name\": $policy_name,
+  #    \"policy_id\": \"$p_lines\",
+  #    \"notification_channels\": ${channels_array[*]}
+  #  }," >> policy-channel.json
+  #elif [ "$p_lines" = "$last_line" ];
+  #then
+  #  echo "    {
+  #    \"policy_name\": $policy_name,
+  #    \"policy_id\": \"$p_lines\",
+  #    \"notification_channels\": ${channels_array[*]}
+  #  }
+  #]
+#}" >> policy-channel.json
+#  else
+#    echo "    {
+#      \"policy_name\": $policy_name,
+#      \"policy_id\": \"$p_lines\",
+#      \"notification_channels\": ${channels_array[*]}
+#    }," >> policy-channel.json
+#  fi
 done < $policies_file
