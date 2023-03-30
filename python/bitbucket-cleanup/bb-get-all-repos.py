@@ -92,6 +92,24 @@ def get_repos(baseURL, username, password, projectKey):
 
     return repo_list
 
+# Function to get latest commit hash from master branch of repo from a project
+def get_latest_commit_hash(baseURL, username, password, projectKey, repo):
+    latest_commit_hash = ""
+    complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
+    debug(complete_url)
+
+    latest_commit_hash = call_url(complete_url, username, password)['values'][0]['id']
+
+    return latest_commit_hash
+
+# Function to call a request to a URL and return the response
+def call_url(url, username, password):
+    headers = {"Content-Type": "application/json"}
+    response = requests.get(url, auth=(username, password), headers=headers)
+    if response.status_code == requests.codes.ok:
+        return response.json()
+    return ""
+
 
 def main():
     pass
@@ -102,26 +120,35 @@ def main():
     debug(f"Username is {username}, and Password is {password}")
     debug(f"Base URL is {baseURL}")
 
+    # Initializations
     project_list = get_projects(baseURL, username, password)
-    debug(project_list)
-   
+    single_project = project_list[0]
+    project_repos = []
+    
     project_count = 0
     all_repos_list = []
-    project_repos = []
+    commit_hash = ""
+
+    info(f"Project_Key,Repo_Slug,Latest_Commit_Hash")
+    repo = get_repos(baseURL, username, password, single_project)[0]
+    commit_hash = get_latest_commit_hash(baseURL, username, password, single_project, repo)
+    
     for project in project_list:
-        debug(f"Project {project_count} is {project}")
-        
         project_repos = get_repos(baseURL, username, password, project)
-        all_repos_list.extend(project_repos)
+        for repo in project_repos:
+            commit_hash = get_latest_commit_hash(baseURL, username, password, project, repo)
+            info(f"{project},{repo},{commit_hash}")
+
+        #all_repos_list.extend(project_repos)
         
-        project_count += 1
-        project_repos = []
+        #project_count += 1
+        #project_repos = []
 
-        debug(len(all_repos_list))
+        #debug(len(all_repos_list))
 
-    debug(f"All repos: {all_repos_list}")
-    total_repos = len(all_repos_list)
-    info(f"Number of repos: {total_repos}")
+    #debug(f"All repos: {all_repos_list}")
+    #total_repos = len(all_repos_list)
+    #info(f"Number of repos: {total_repos}")
 
 if __name__ == '__main__':
     args = parse_arguments()
