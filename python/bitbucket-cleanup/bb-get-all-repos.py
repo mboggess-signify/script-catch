@@ -68,16 +68,12 @@ def get_projects(baseURL, username, password):
         debug(f"Unexpected {err=}, {type(err)=}")
         sys.exit()
 
-    try:
-        #pprint(list(bitbucket.project_list()))
-        #pprint(bitbucket.project("VHRA"))
+    #pprint(list(bitbucket.project_list()))
+    #pprint(bitbucket.project("VHRA"))
 
-        for project in bitbucket.project_list():
-            #print(str(project['key']))
-            project_list.append(str(project['key']))
-    except Exception as err:
-        debug(f"Unexpected {err=}, {type(err)=}")
-        sys.exit()
+    for project in bitbucket.project_list():
+        #print(str(project['key']))
+        project_list.append(str(project['key']))
 
     return project_list
 
@@ -90,15 +86,12 @@ def get_repos(baseURL, username, password, projectKey):
         debug(f"Unexpected {err=}, {type(err)=}")
         sys.exit()
 
-    try:
-        #pprint(list(bitbucket.repo_list(projectKey)))
-        for repo in bitbucket.repo_list(projectKey):
+    #pprint(list(bitbucket.repo_list(projectKey)))
+    for repo in bitbucket.repo_list(projectKey):
             repo_list.append(str(repo['slug']))
-    except Exception as err:
-        debug(f"Unexpected {err=}, {type(err)=}")
-        sys.exit()
 
     return repo_list
+
 
 def main():
     pass
