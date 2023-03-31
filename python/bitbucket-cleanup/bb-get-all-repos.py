@@ -98,7 +98,24 @@ def get_latest_commit_hash(baseURL, username, password, projectKey, repo):
     complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
     debug(complete_url)
 
-    latest_commit_hash = call_url(complete_url, username, password)['values'][0]['id']
+    response = call_url(complete_url, username, password)
+
+    try:
+        latest_commit_hash = response['values'][0]['id']
+    except TypeError as err:
+        debug(f"Unexpected {err=}, {type(err)=}")
+        debug(f"{response}")
+        debug("Probably no master branch")
+        latest_commit_hash = "NoMaster"
+    except IndexError as err:
+        debug(f"Unexpected {err=}, {type(err)=}")
+        debug(f"{response}")
+        debug("Probably empty repo")
+        latest_commit_hash = "EmptyRepo"
+    except Exception as err:
+        debug(f"Unexpected {err=}, {type(err)=}")
+        debug(f"{response}")
+        latest_commit_hash = None
 
     return latest_commit_hash
 
