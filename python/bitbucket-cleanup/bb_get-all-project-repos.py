@@ -29,8 +29,8 @@ with open("config.yaml") as file:
 def parse_arguments():
     """Read arguments from a command line."""
     parser = argparse.ArgumentParser(
-        prog='bb-get-all-repos',
-        description='Return a CSV file with names of all repos from a given BitBucket instance')
+        prog='bb-get-all-project-repos',
+        description='Return a CSV file with names of all project repos from a given BitBucket instance')
 
     # Use argument to set logging level
     parser.add_argument('-v', '--verbosity', metavar='\b', type=int, default=2,
