@@ -1,6 +1,6 @@
 #!/Users/mboggess/.virtualenvs/bb/bin/python
 # File Name: bb-get-all-repos.py
-# Description: Return a CSV file with names of all repos from a given BitBucket instance
+# Description: Return a CSV file with names of all project repos from a given BitBucket instance
 # Author: Megan Boggess
 # Created Date: 03-29-2023
 
@@ -12,9 +12,16 @@ from logging import critical, error, info, warning, debug
 import requests
 from requests.auth import HTTPBasicAuth
 import json
-import atlassian
-from atlassian import Bitbucket
 from pprint import pprint
+import base64
+import csv
+import os
+import yaml
+
+# Read config file
+with open("config.yaml") as file:
+    config = yaml.safe_load(file)
+    file.close()
 
 # Define functions here
 
@@ -29,17 +36,9 @@ def parse_arguments():
     parser.add_argument('-v', '--verbosity', metavar='\b', type=int, default=2,
         help='verbosity of logging: 0 -critical, 1 -error, 2 -warning, 3 -info, 4 -debug')
 
-    # Use argument to set username
-    parser.add_argument('-u', '--username', metavar='\b', type=str, required=True,
-        help='username of user to access BitBucket instance')
-
     # Use argument to set password
-    parser.add_argument('-p', '--password', metavar='\b', type=str, required=True,
-        help='password of user to access BitBucket instance')
-
-    # Use argument to set base URL
-    parser.add_argument('-b', '--baseURL', metavar='\b', type=str, required=True,
-        help='base URL to BitBucket instance')
+    parser.add_argument('-p', '--pat', metavar='\b', type=str, required=True,
+        help='personal access token of user to access BitBucket instance')
 
     args = parser.parse_args()
 
@@ -50,55 +49,37 @@ def parse_arguments():
 
     return args
 
-# Function to log in to Bitbucket instance
-def bitbucket_login(baseURL, username, password):
-    bitbucket = Bitbucket(
-        url = baseURL,
-        username = username,
-        password = password)
-
-    return bitbucket
-
 # Function to get all projects
-def get_projects(baseURL, username, password):
+def get_projects(baseURL, headers):
     project_list = []
-    try:
-        bitbucket = bitbucket_login(baseURL, username, password)
-    except Exception as err:
-        debug(f"Unexpected {err=}, {type(err)=}")
-        sys.exit()
 
-    #pprint(list(bitbucket.project_list()))
-    #pprint(bitbucket.project("VHRA"))
+    complete_url = "{}/rest/api/1.0/projects?limit=300".format(baseURL)
+    debug(complete_url)
 
-    for project in bitbucket.project_list():
-        #print(str(project['key']))
-        project_list.append(str(project['key']))
+    response = call_url(complete_url, headers)
+    debug(response)
 
-    return project_list
+    return response
 
 # Function to get repos from a project
-def get_repos(baseURL, username, password, projectKey):
+def get_repos(baseURL, headers, projectKey):
     repo_list = []
-    try:
-        bitbucket = bitbucket_login(baseURL, username, password)
-    except Exception as err:
-        debug(f"Unexpected {err=}, {type(err)=}")
-        sys.exit()
 
-    #pprint(list(bitbucket.repo_list(projectKey)))
-    for repo in bitbucket.repo_list(projectKey):
-            repo_list.append(str(repo['slug']))
+    complete_url = "{}/rest/api/1.0/projects/{}/repos?limit=300".format(baseURL, projectKey)
+    debug(complete_url)
 
-    return repo_list
+    response = call_url(complete_url, headers)
+    debug(response)
+
+    return response
 
 # Function to get latest commit hash from master branch of repo from a project
-def get_latest_commit_hash(baseURL, username, password, projectKey, repo):
+def get_latest_commit_hash(baseURL, headers, projectKey, repo):
     latest_commit_hash = ""
     complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
     debug(complete_url)
 
-    response = call_url(complete_url, username, password)
+    response = call_url(complete_url, headers)
 
     try:
         latest_commit_hash = response['values'][0]['id']
@@ -120,40 +101,48 @@ def get_latest_commit_hash(baseURL, username, password, projectKey, repo):
     return latest_commit_hash
 
 # Function to call a request to a URL and return the response
-def call_url(url, username, password):
-    headers = {"Content-Type": "application/json"}
-    response = requests.get(url, auth=(username, password), headers=headers)
+def call_url(url, headers):
+    headers = headers
+    response = requests.get(url, headers=headers)
     if response.status_code == requests.codes.ok:
         return response.json()
-    return ""
+    return response.status_code
 
 
 def main():
     pass
 
-    username = args.username
-    password = args.password
-    baseURL = args.baseURL
-    debug(f"Username is {username}, and Password is {password}")
+    bb_pat = args.pat
+    baseURL = config['bitbucket_base_url']
     debug(f"Base URL is {baseURL}")
 
+    # Define headers for API calls
+    #authorization = str(base64.b64encode(bytes(':'+bb_pat, 'ascii')), 'ascii')
+    headers = {
+        'Accept': 'application/json',
+        'Authorization': 'Bearer '+bb_pat
+    }
+
     # Initializations
-    project_list = get_projects(baseURL, username, password)
-    single_project = project_list[0]
+    project_list = json.loads(json.dumps(get_projects(baseURL, headers)['values']))
+
+    project_keys = [dic['key'] for dic in project_list]
+    debug(project_keys)
+
     project_repos = []
-    
     project_count = 0
     all_repos_list = []
     commit_hash = ""
 
     info(f"Project_Key,Repo_Slug,Latest_Commit_Hash")
-    repo = get_repos(baseURL, username, password, single_project)[0]
-    commit_hash = get_latest_commit_hash(baseURL, username, password, single_project, repo)
     
-    for project in project_list:
-        project_repos = get_repos(baseURL, username, password, project)
-        for repo in project_repos:
-            commit_hash = get_latest_commit_hash(baseURL, username, password, project, repo)
+    for project in project_keys:
+        repo_list = json.loads(json.dumps(get_repos(baseURL, headers, project)['values']))
+        repo_slugs = [dic['slug'] for dic in repo_list]
+        debug(repo_slugs)
+
+        for repo in repo_slugs:
+            commit_hash = get_latest_commit_hash(baseURL, headers, project, repo)
             info(f"{project},{repo},{commit_hash}")
 
         #all_repos_list.extend(project_repos)
