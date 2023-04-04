@@ -1,0 +1,17 @@
+---
+
+# Bitbucket base URL to check
+bitbucket_base_url: "https://bitbucket.remedypartners.com"
+#bitbucket_base_url: "https://chgit.censeohealth.com"
+
+# ADO base URL, with ORG
+ado_base_url: "https://dev.azure.com/signifyhealth"
+
+# ADO REST API Version
+ado_api_version: "7.0"
+
+# ADO project
+ado_project: "HCC"
+
+# Path to CSV with Bitbucket repo/commit ID information
+bb_repo_csv: "/Users/mboggess/git/github/script-catch/python/bitbucket-cleanup/bb_project-repo-hash.csv"
