@@ -15,6 +15,13 @@ import json
 from pprint import pprint
 import base64
 import csv
+import os
+import yaml
+
+# Read config file
+with open("config.yaml") as file:
+    config = yaml.safe_load(file)
+    file.close()
 
 # Define functions here
 
@@ -32,16 +39,6 @@ def parse_arguments():
     # Use argument to set PAT
     parser.add_argument('-p', '--pat', metavar='\b', type=str, required=True,
         help='personal access token (PAT) of user to access ADO instance')
-
-    # Use argument to set base URL
-    parser.add_argument('-b', '--base_url', metavar='\b', type=str, required=True,
-        help='base URL to ADO instance (with ORG!)')
-
-    parser.add_argument('-a', '--api_vers', metavar='\b', type=str, default="7.0",
-        help='ADO rest api version to use')
-
-    parser.add_argument('-f', '--bb_repo_csv', metavar='\b', type=str, required=True,
-        help='PATH to csv file with Bitbucket repo information')
 
     args = parser.parse_args()
 
@@ -84,13 +81,10 @@ def main():
     pass
 
     personal_access_token = args.pat
-    org_url = args.base_url
-    api_version = args.api_vers
-    ado_project = "HCC"
-    #ado_repo = "shared.angular"
-    #ado_repo2 = "addressverificationapi"
-    #bb_commit_id = "c4ce347254ecc48f25c88b6931259275da45dd69"
-    bb_repo_file = args.bb_repo_csv
+    ado_base_url = config['ado_base_url']
+    ado_api_version = config['ado_api_version']
+    ado_project = config['ado_project']
+    bb_repo_file = config['bb_repo_csv']
     debug(f"ORG URL is {org_url}")
 
     # Define headers for API calls
@@ -101,7 +95,7 @@ def main():
     }
 
     # Get all ADO repos (just one org: "HCC", no projects?) as a json array
-    ado_repos = json.loads(json.dumps(get_all_repos(org_url, headers, api_version)['value']))
+    ado_repos = json.loads(json.dumps(get_all_repos(ado_base_url, headers, ado_api_version)['value']))
     debug(ado_repos)
     ado_repo_names = [dic['name'] for dic in ado_repos]
     debug(ado_repo_names)
@@ -129,14 +123,6 @@ def main():
                 else:
                     debug("NULL")
 
-    # Grab commit hash
-    # Search for commit hash in each of ADO repos
-    # Bail once it finds it, note which ADO repo the BB hash was found in
-    # If it doesn't find it, note that it was not migrated
-
-
-
-    
 
 if __name__ == '__main__':
     args = parse_arguments()
