@@ -85,7 +85,6 @@ def main():
     ado_api_version = config['ado_api_version']
     ado_project = config['ado_project']
     bb_repo_file = config['bb_repo_csv']
-    debug(f"ORG URL is {org_url}")
 
     # Define headers for API calls
     authorization = str(base64.b64encode(bytes(':'+personal_access_token, 'ascii')), 'ascii')
@@ -105,24 +104,31 @@ def main():
 
     with open(bb_repo_file, newline='\n') as csvfile:
         reporeader = csv.reader(csvfile, delimiter=',')
+        next(reporeader)
+
         for row in reporeader:
+            debug(row)
             bb_repo = row[1]
             bb_commit_id = row[2]
 
             for ado_repo in ado_repo_names:
+                migrated = ""
                 debug(f"{bb_repo}, {bb_commit_id}, {ado_repo}")
                 search_response = json.loads(json.dumps(search_repo_for_commit_id(
-                    headers, org_url, ado_project, ado_repo, bb_commit_id, api_version)))
+                    headers, ado_base_url, ado_project, ado_repo, bb_commit_id, ado_api_version)))
                 debug(search_response)
-        
+
                 if search_response == "":
-                    debug("NULL")
+                    migrated = "NotMigrated"
+                    debug(search_response)
                 elif search_response["count"] == 1:
-                    info(f"{bb_repo},{bb_commit_id},{ado_repo}")
+                    migrated = ado_repo
                     break
                 else:
-                    debug("NULL")
+                    migrated = "NotMigrated"
+                    debug(search_response)
 
+            info(f"{bb_repo},{bb_commit_id},{migrated}")
 
 if __name__ == '__main__':
     args = parse_arguments()
