@@ -13,5 +13,6 @@ ado_api_version: "7.0"
 # ADO project
 ado_project: "HCC"
 
-# Path to CSV with Bitbucket repo/commit ID information
-bb_repo_csv: "/Users/mboggess/git/github/script-catch/python/bitbucket-cleanup/bb_project-repo-hash.csv"
+# Bitbucket CSV file path
+bb_repo_csv: "/Users/mboggess/git/github/script-catch/python/bitbucket-cleanup/data/bb-rp_repos-hashes.csv"
+#bb_repo_csv: "/Users/mboggess/git/github/script-catch/python/bitbucket-cleanup/data/bb-ch_repos-hashes.csv"
