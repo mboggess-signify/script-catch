@@ -17,6 +17,7 @@ import base64
 import csv
 import os
 import yaml
+import datetime
 
 # Read config file
 with open("config.yaml") as file:
@@ -75,14 +76,18 @@ def get_repos(baseURL, headers, projectKey):
 
 # Function to get latest commit hash from master branch of repo from a project
 def get_latest_commit_hash(baseURL, headers, projectKey, repo):
-    latest_commit_hash = ""
+    #latest_commit_hash = ""
+    last_commit_epoch = ""
+    last_commit_date = ""
     complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
     debug(complete_url)
 
     response = call_url(complete_url, headers)
 
     try:
-        latest_commit_hash = response['values'][0]['id']
+        #latest_commit_hash = response['values'][0]['id']
+        last_commit_epoch = response['values'][0]['authorTimestamp']
+        last_commit_date = datetime.datetime.fromtimestamp(last_commit_epoch/1000)
     except TypeError as err:
         debug(f"Unexpected {err=}, {type(err)=}")
         debug(f"{response}")
@@ -98,7 +103,8 @@ def get_latest_commit_hash(baseURL, headers, projectKey, repo):
         debug(f"{response}")
         latest_commit_hash = None
 
-    return latest_commit_hash
+
+    return last_commit_date
 
 # Function to call a request to a URL and return the response
 def call_url(url, headers):
