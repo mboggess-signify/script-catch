@@ -1,5 +1,5 @@
-#!/Users/mboggess/.virtualenvs/bb/bin/python
-# File Name: bb-get-all-repos.py
+#!/Users/mboggess/.virtualenvs/bb/bin/python3
+# File Name: bb_get-all-project-repos.py
 # Description: Return a CSV file with names of all project repos from a given BitBucket instance
 # Author: Megan Boggess
 # Created Date: 03-29-2023
@@ -30,7 +30,7 @@ with open("config.yaml") as file:
 def parse_arguments():
     """Read arguments from a command line."""
     parser = argparse.ArgumentParser(
-        prog='bb-get-all-project-repos',
+        prog='bb_get-all-project-repos',
         description='Return a CSV file with names of all project repos from a given BitBucket instance')
 
     # Use argument to set logging level
@@ -74,9 +74,8 @@ def get_repos(baseURL, headers, projectKey):
 
     return response
 
-# Function to get latest commit hash from master branch of repo from a project
-def get_latest_commit_hash(baseURL, headers, projectKey, repo):
-    #latest_commit_hash = ""
+# Function to get latest commit date from master branch of repo from a project
+def get_latest_commit_date(baseURL, headers, projectKey, repo):
     last_commit_epoch = ""
     last_commit_date = ""
     complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
@@ -85,9 +84,36 @@ def get_latest_commit_hash(baseURL, headers, projectKey, repo):
     response = call_url(complete_url, headers)
 
     try:
-        #latest_commit_hash = response['values'][0]['id']
         last_commit_epoch = response['values'][0]['authorTimestamp']
         last_commit_date = datetime.datetime.fromtimestamp(last_commit_epoch/1000)
+    except TypeError as err:
+        debug(f"Unexpected {err=}, {type(err)=}")
+        debug(f"{response}")
+        debug("Probably no master branch")
+        latest_commit_date = "NoMaster"
+    except IndexError as err:
+        debug(f"Unexpected {err=}, {type(err)=}")
+        debug(f"{response}")
+        debug("Probably empty repo")
+        latest_commit_date = "EmptyRepo"
+    except Exception as err:
+        debug(f"Unexpected {err=}, {type(err)=}")
+        debug(f"{response}")
+        latest_commit_date = None
+
+
+    return last_commit_date
+
+# Function to get latest commit hash from master branch of repo from a project
+def get_latest_commit_hash(baseURL, headers, projectKey, repo):
+    latest_commit_hash = ""
+    complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
+    debug(complete_url)
+
+    response = call_url(complete_url, headers)
+
+    try:
+        latest_commit_hash = response['values'][0]['id']
     except TypeError as err:
         debug(f"Unexpected {err=}, {type(err)=}")
         debug(f"{response}")
@@ -138,9 +164,10 @@ def main():
     project_repos = []
     project_count = 0
     all_repos_list = []
+    commit_date = ""
     commit_hash = ""
 
-    info(f"Project_Key,Repo_Slug,Latest_Commit_Hash")
+    info(f"Project_Key,Repo_Slug,Latest_Commit_Date,Latest_Commit_Hash")
     
     for project in project_keys:
         repo_list = json.loads(json.dumps(get_repos(baseURL, headers, project)['values']))
@@ -149,18 +176,12 @@ def main():
 
         for repo in repo_slugs:
             commit_hash = get_latest_commit_hash(baseURL, headers, project, repo)
-            info(f"{project},{repo},{commit_hash}")
+            commit_date = get_latest_commit_date(baseURL, headers, project, repo)
+            info(f"{project},{repo},{commit_date},{commit_hash}")
 
-        #all_repos_list.extend(project_repos)
-        
-        #project_count += 1
-        #project_repos = []
-
-        #debug(len(all_repos_list))
-
-    #debug(f"All repos: {all_repos_list}")
-    #total_repos = len(all_repos_list)
-    #info(f"Number of repos: {total_repos}")
+    debug(f"All repos: {all_repos_list}")
+    total_repos = len(all_repos_list)
+    debug(f"Number of repos: {total_repos}")
 
 if __name__ == '__main__':
     args = parse_arguments()
