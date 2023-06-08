@@ -20,7 +20,7 @@ import yaml
 import datetime
 
 # Read config file
-with open("config-bamboo.yaml") as file:
+with open("config_bamboo.yaml") as file:
     config = yaml.safe_load(file)
     file.close()
 
@@ -61,39 +61,6 @@ def get_projects(baseURL, headers):
     return response
 
 
-# Function to get all plans of given project
-def get_project_plans(baseURL, headers, key):
-    complete_url = "{}/rest/api/latest/result/{}".format(baseURL, key)
-    debug(complete_url)
-
-    response = call_url(complete_url, headers)
-    debug(response)
-
-    return response
-
-
-# Function to get all build results
-def get_build_results(baseURL, headers):
-    complete_url = "{}/rest/api/latest/result".format(baseURL)
-    debug(complete_url)
-
-    response = call_url(complete_url, headers)
-    debug(response)
-
-    return response
-
-
-# Function to get build completed date
-def get_latest_build_date(baseURL, headers, key):
-    complete_url = "{}/rest/api/latest/result/{}".format(baseURL, key)
-    debug(complete_url)
-
-    response = call_url(complete_url, headers)
-    debug(response)
-
-    return response
-
-
 # Function to call a request to a URL and return the response
 def call_url(url, headers):
     headers = headers
@@ -120,8 +87,6 @@ def main():
     # Initializations
     project_list = []
     project_keys = []
-    project_plans_list = []
-    build_results_keys = []
 
     # Get Projects
     project_list = json.loads(json.dumps(get_projects(baseURL, headers)['projects']['project']))
@@ -133,23 +98,15 @@ def main():
     # Print header for csv file
     info(f"Project_Key,Project_Plan,Latest_Build_Date")
 
-    for key in project_keys:
-        # Get each project's plans
-        project_plans_list = json.loads(json.dumps(get_project_plans(baseURL, headers, key)['results']['result']))
-        debug(project_plans_list)
+#    for key in project_keys:
+        # Get each project's deploys
 
-        # Get each plan's build result key
-        build_result_keys = [dic['buildResultKey'] for dic in project_plans_list]
-        debug(build_result_keys)
+        # Get each deploy's details
 
-        for br_key in build_result_keys:
-            # Get each build result's build completed date
-            build_date = json.loads(json.dumps(get_latest_build_date(baseURL, headers, br_key)['buildCompletedDate']))
-            project_key = key
-            project_plan = br_key.split('-')[1]
+#        for x in y:
+            # Get each deploy's completed date
 
             # Print data to csv file
-            info(f"{project_key},{project_plan},{build_date}")
 
 
 if __name__ == '__main__':

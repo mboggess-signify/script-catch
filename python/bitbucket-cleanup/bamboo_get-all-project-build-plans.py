@@ -20,7 +20,7 @@ import yaml
 import datetime
 
 # Read config file
-with open("config-bamboo.yaml") as file:
+with open("config_bamboo.yaml") as file:
     config = yaml.safe_load(file)
     file.close()
 
