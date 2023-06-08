@@ -1,2 +1,2 @@
 data/**
-config-*.yaml
+config_[bb,bamboo]-*.yaml
