@@ -1,6 +1,6 @@
 #!/Users/mboggess/.virtualenvs/bb/bin/python3
-# File Name: bamboo_get-all-project-plans.py
-# Description: Return a CSV file with names of all project plans from a given Bamboo instance
+# File Name: bamboo_get-all-project-build-plans.py
+# Description: Return a CSV file with names of all project build plans from a given Bamboo instance
 # Author: Megan Boggess
 # Created Date: 06-07-2023
 
@@ -30,8 +30,8 @@ with open("config-bamboo.yaml") as file:
 def parse_arguments():
     """Read arguments from a command line."""
     parser = argparse.ArgumentParser(
-        prog='bamboo_get-all-project-plans',
-        description='Return a CSV file with names of all project plans from a given Bamboo instance')
+        prog='bamboo_get-all-project-build-plans',
+        description='Return a CSV file with details of all project build plans from a given Bamboo instance')
 
     # Use argument to set logging level
     parser.add_argument('-v', '--verbosity', metavar='\b', type=int, default=2,
