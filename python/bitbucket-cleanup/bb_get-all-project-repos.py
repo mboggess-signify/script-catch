@@ -76,16 +76,17 @@ def get_repos(baseURL, headers, projectKey):
 
 # Function to get latest commit date from master branch of repo from a project
 def get_latest_commit_date(baseURL, headers, projectKey, repo):
-    last_commit_epoch = ""
-    last_commit_date = ""
+    latest_commit_epoch = ""
+    latest_commit_date = ""
     complete_url = "{}/rest/api/latest/projects/{}/repos/{}/commits?limit=1".format(baseURL, projectKey, repo)
     debug(complete_url)
 
     response = call_url(complete_url, headers)
+    debug(response)
 
     try:
-        last_commit_epoch = response['values'][0]['authorTimestamp']
-        last_commit_date = datetime.datetime.fromtimestamp(last_commit_epoch/1000)
+        latest_commit_epoch = response['values'][0]['authorTimestamp']
+        latest_commit_date = datetime.datetime.fromtimestamp(latest_commit_epoch/1000)
     except TypeError as err:
         debug(f"Unexpected {err=}, {type(err)=}")
         debug(f"{response}")
@@ -101,8 +102,7 @@ def get_latest_commit_date(baseURL, headers, projectKey, repo):
         debug(f"{response}")
         latest_commit_date = None
 
-
-    return last_commit_date
+    return latest_commit_date
 
 # Function to get latest commit hash from master branch of repo from a project
 def get_latest_commit_hash(baseURL, headers, projectKey, repo):
@@ -129,8 +129,7 @@ def get_latest_commit_hash(baseURL, headers, projectKey, repo):
         debug(f"{response}")
         latest_commit_hash = None
 
-
-    return last_commit_date
+    return latest_commit_hash
 
 # Function to call a request to a URL and return the response
 def call_url(url, headers):
