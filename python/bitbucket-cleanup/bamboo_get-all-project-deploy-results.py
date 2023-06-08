@@ -1,6 +1,6 @@
 #!/Users/mboggess/.virtualenvs/bb/bin/python3
 # File Name: bamboo_get-all-project-deploy-results.py
-# Description: Return a CSV file with names of all project deploy results from a given Bamboo instance
+# Description: Return a CSV file with details of all project deploy results from a given Bamboo instance
 # Author: Megan Boggess
 # Created Date: 06-08-2023
 
@@ -30,7 +30,7 @@ with open("config-bamboo.yaml") as file:
 def parse_arguments():
     """Read arguments from a command line."""
     parser = argparse.ArgumentParser(
-        prog='bamboo_get-all-project-plans',
+        prog='bamboo_get-all-project-deploy-results',
         description='Return a CSV file with details of all project deploy results from a given Bamboo instance')
 
     # Use argument to set logging level
