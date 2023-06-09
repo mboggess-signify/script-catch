@@ -50,9 +50,20 @@ def parse_arguments():
 
     return args
 
-# Function to get all projects
-def get_projects(baseURL, headers):
-    complete_url = "{}/rest/api/latest/project?showEmpty=true".format(baseURL)
+# Function to get all deployment projects
+def get_deployment_projects(baseURL, headers):
+    complete_url = "{}/rest/api/latest/deploy/project/all".format(baseURL)
+    debug(complete_url)
+
+    response = call_url(complete_url, headers)
+    debug(response)
+
+    return response
+
+
+# Function to get deployment project's dashboard
+def get_deployment_project_dashboard(baseURL, headers, deployment_project_id):
+    complete_url = "{}/rest/api/latest/deploy/dashboard/{}".format(baseURL, deployment_project_id)
     debug(complete_url)
 
     response = call_url(complete_url, headers)
@@ -85,26 +96,70 @@ def main():
     }
 
     # Initializations
-    project_list = []
-    project_keys = []
+    deployment_project_list = []
+    deployment_project_ids = []
+    deployment_project_names = []
+    deployment_project_details = {}
 
-    # Get Projects
-    project_list = json.loads(json.dumps(get_projects(baseURL, headers)['projects']['project']))
-    debug(project_list)
+    # Get Deployment Projects
+    deployment_project_list = json.loads(json.dumps(get_deployment_projects(baseURL, headers)))
+    debug(deployment_project_list)
 
-    project_keys = [dic['key'] for dic in project_list]
-    debug(project_keys)
+    deployment_project_ids = [dic['id'] for dic in deployment_project_list]
+    debug(deployment_project_ids)
+
+    deployment_project_names = [dic['name'] for dic in deployment_project_list]
+    debug(deployment_project_names)
+
+    deployment_project_details = {deployment_project_ids[i]: deployment_project_names[i] for i in range(len(deployment_project_ids))}
+    debug(deployment_project_details)
 
     # Print header for csv file
-    info(f"Project_Key,Project_Plan,Latest_Build_Date")
+    info(f"DeploymentProjectName, EnvironmentName, LastEnvironmentDeployDate")
 
-#    for key in project_keys:
-        # Get each project's deploys
+    for dp_id in deployment_project_ids:
+        # Get each project's deploy dashboard
+        deployment_project_dashboard = json.loads(json.dumps(get_deployment_project_dashboard(baseURL, headers, dp_id)[0]))
+        debug(deployment_project_dashboard)
+        debug(type(deployment_project_dashboard))
+        debug(deployment_project_dashboard.keys())
 
-        # Get each deploy's details
+        dp_name = deployment_project_details[dp_id]
+        debug(dp_name)
 
-#        for x in y:
-            # Get each deploy's completed date
+        # Check if environmentStatuses array exists
+        # If so, there is environment data
+        # If not, there is no environment data, so can just say "No environments"
+        envStatusCheck = deployment_project_dashboard.get('environmentStatuses')
+        debug(type(envStatusCheck))
+        debug(envStatusCheck)
+        
+        if envStatusCheck is not None:
+            debug(f"There are environment deploys!")
+
+            deploy_results_check_key = "deploymentResult"
+            environment_name = ""
+            environment_last_deploy_epoch = ""
+            environment_last_deploy_date = ""
+
+            for environment in envStatusCheck:
+                if deploy_results_check_key in environment:
+                    environment_name = environment['environment']['name']
+                    environment_last_deploy_epoch = environment['deploymentResult']['finishedDate']
+                    environment_last_deploy_date = datetime.datetime.fromtimestamp(environment_last_deploy_epoch/1000)
+                    debug(f"There are deployment results for {environment_name}!")
+                else:
+                    environment_name = environment['environment']['name']
+                    environment_last_deploy_date = "N/A"
+                    debug(f"There are no deploys for {environment_name}")
+
+                info(f"{dp_name}, {environment_name}, {environment_last_deploy_date}")
+        else:
+            debug(f"There were never environment deploys!")
+            environment_name = "None"
+            environment_last_deploy_date = "N/A"
+            info(f"{dp_name}, {environment_name}, {environment_last_deploy_date}")
+
 
             # Print data to csv file
 
